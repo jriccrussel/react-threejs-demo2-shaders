@@ -7,36 +7,94 @@ import "./App.css"
 
 const WaveShaderMaterial = shaderMaterial(
   // Uniform
-  { uColor: new THREE.Color(0.0, 0.0, 0.0) },
+  { 
+    // Time
+    uTime: 0,
+
+    // Gradient
+    uColor: new THREE.Color(0.0, 0.0, 0.0),
+  },
 
   // Vertex Shader
   glsl`
+    // Gradient
+    varying vec2 vUv
+
     void main() {
+      // Gradient
+      vUv = uv
+
+      // Position
       gl_Position = projectionMatrix * modelViewMatrix * ve4(position, 1.0)
     }
   `,
 
   // Fragment Shader
   glsl`
+    // Determine Precision the GPU uses when calculating floats
+    precision mediump float
+
+    // Solid Color
     uniform vec3 uColor
 
+    // Time
+    uniform float uTime
+
+    // Gradient
+    varying vec2 vUv
+
     void main() {
-      gl_FragColor = vec4(uColor, 1.0)
+      // gl_FragColor = vec4(uColor, 1.0)
+
+      // Gradient X Axis | Multiply Color
+      // gl_FragColor = vec4(vUv.x * uColor, 1.0)
+
+      // Gradient Y Axis | Multiply Color
+      // gl_FragColor = vec4(vUv.y * uColor, 1.0)
+
+      // Gradient Y Axis | Color Divide
+      // gl_FragColor = vec4(vUv.y / uColor, 1.0)
+
+      // Gradient Y Axis | Color Light
+      // gl_FragColor = vec4(vUv.y + uColor, 1.0)
+
+      // Gradient Multiple Colors
+      // gl_FragColor = vec4(vUv.x, 0.4, 1.0, 1.0)
+
+      // Move left to right
+      gl_FragColor = vec4(sin(vUv.x + uTime) * uColor, 1.0)
     }
   `
 )
 
 extend({ WaveShaderMaterial })
 
+const Wave = () => {
+  const ref = useRef()
+
+  // Time
+  useFrame(({clock}) => (ref.current.uTime = clock.getElapsedTime()))
+
+  return (
+    <mesh>
+      <planeBufferGeometry args={[0.4, 0.6, 16, 16]} />
+      <waveShaderMaterial uColor={"hotpink"}/>
+    </mesh>
+  )
+}
+
 const Scene = () => {
   return (
     <Canvas>
-      <pointLight position={[10, 10, 10]}/>
+      {/* <pointLight position={[10, 10, 10]}/>
       <mesh>
         <planeBufferGeometry args={[0.4, 0.6, 16, 16]} />
-        {/* <meshStandardMaterial color='lightblue'/> */}
+        <meshStandardMaterial color='lightblue'/>
         <waveShaderMaterial uColor={"hotpink"}/>
-      </mesh>
+      </mesh> */}
+      <Suspense fallback={null}>
+        <Wave />
+      </Suspense>
     </Canvas>
   )
 }
