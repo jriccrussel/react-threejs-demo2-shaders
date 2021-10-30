@@ -20,12 +20,25 @@ const WaveShaderMaterial = shaderMaterial(
     // Gradient
     varying vec2 vUv
 
+    // Time
+    uniform float uTime
+
+    #pragma glslify: snoise3 = require(glsl-noise/simplex/3d)
+
     void main() {
       // Gradient
       vUv = uv
 
+      // Wave Effect
+      vec3 pos = position;
+      float noiseFreq = 2.0;
+      float noiseAmp = 0.4;
+      vec3 noisePos = vec3(pos.x * noiseFreq + uTime, pos.y, pos.z);
+      pos.z += snoise3(noisePos) * noiseAmp;
+      vWave = pos.z;
+
       // Position
-      gl_Position = projectionMatrix * modelViewMatrix * ve4(position, 1.0)
+      gl_Position = projectionMatrix * modelViewMatrix * ve4(pos, 1.0)
     }
   `,
 
@@ -85,7 +98,7 @@ const Wave = () => {
 
 const Scene = () => {
   return (
-    <Canvas>
+    <Canvas camera={{ fov: 12, position: [0, 0, 5] }}>
       {/* <pointLight position={[10, 10, 10]}/>
       <mesh>
         <planeBufferGeometry args={[0.4, 0.6, 16, 16]} />
